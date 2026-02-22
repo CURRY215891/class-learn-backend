@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.xd.xdclasslearnbackend.mapper.CourseMapper">
+    <select id="count" resultType="java.lang.Integer">
+        select COUNT(*) from course c
+        <where>
+            <if test="course.title != null and course.title !=''">
+                and c.title like CONCAT('%',#{course.title},'%')
+            </if>
+            <if test="course.description != null and course.description !=''">
+                and c.description like CONCAT('%',#{course.description},'%')
+            </if>
+            <if test="course.teacherName != null and course.teacherName !=''">
+                and c.teacher_name like CONCAT('%',#{course.teacherName},'%')
+            </if>
+            <if test="course.type != null and course.type.id != null">
+                and c.type_id = #{course.type.id}
+            </if>
+            <if test="course.creator != null and course.creator.id != null">
+                and c.creator_id = #{course.creator.id}
+            </if>
+            <if test="minRating != null">
+                and c.rating >= #{minRating}
+            </if>
+            <if test="minStudentCount != null">
+                and c.student_count >= #{minStudentCount}
+            </if>
+        </where>
+    </select>
+
+    <resultMap id="courseResultMap" type="course" autoMapping="true">
+        <id property="id" column="id"></id>
+        <result property="title" column="title"></result>
+        <result property="description" column="description"></result>
+        <result property="detail" column="detail"></result>
+        <result property="coverImage" column="cover_image"></result>
+        <result property="teacherName" column="teacher_name"></result>
+        <result property="price" column="price"></result>
+        <result property="rating" column="rating"></result>
+        <result property="studentCount" column="student_count"></result>
+        <result property="createdTime" column="created_time"></result>
+        <result property="updatedTime" column="updated_time"></result>
+
+        <!-- 关联映射 CourseType -->
+        <association property="type" javaType="com.xd.xdclasslearnbackend.entity.CourseType">
+            <id property="id" column="type_id"></id>
+            <result property="name" column="type_name"></result>
+        </association>
+
+        <!-- 关联映射 Creator (User) -->
+        <association property="creator" javaType="com.xd.xdclasslearnbackend.entity.User">
+            <id property="id" column="creator_id"></id>
+            <result property="username" column="creator_username"></result>
+        </association>
+    </resultMap>
+
+    <select id="findListByPage" resultMap="courseResultMap">
+        select c.id,
+               c.title,
+               c.description,
+               c.cover_image,
+               c.teacher_name,
+               c.price,
+               c.rating,
+               c.student_count,
+               c.created_time,
+               c.updated_time,
+               c.type_id,
+               ct.name as type_name,
+               c.creator_id,
+               u.username as creator_username
+        from course c
+                 left join course_type ct on c.type_id = ct.id
+                 left join user u on c.creator_id = u.id
+        <where>
+            <if test="course.title != null and course.title !=''">
+                and c.title like CONCAT('%',#{course.title},'%')
+            </if>
+            <if test="course.description != null and course.description !=''">
+                and c.description like CONCAT('%',#{course.description},'%')
+            </if>
+            <if test="course.teacherName != null and course.teacherName !=''">
+                and c.teacher_name like CONCAT('%',#{course.teacherName},'%')
+            </if>
+            <if test="course.type != null and course.type.id != null">
+                and c.type_id = #{course.type.id}
+            </if>
+            <if test="course.creator != null and course.creator.id != null">
+                and c.creator_id = #{course.creator.id}
+            </if>
+        </where>
+        order by c.created_time DESC
+        limit #{offset},#{pageSize}
+    </select>
+</mapper>
